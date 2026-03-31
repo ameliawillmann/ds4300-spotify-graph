@@ -1,3 +1,8 @@
+"""
+neo4j_connection.py
+Connects and disconnects from the neo4j database.
+"""
+
 from neo4j import GraphDatabase
 
 # ============================================================
@@ -6,7 +11,7 @@ from neo4j import GraphDatabase
 
 NEO4J_URI = "bolt://localhost:7687"
 NEO4J_USER = "neo4j"
-NEO4J_PASSWORD = "CharGoes2NU2022!"  
+NEO4J_PASSWORD = "CharGoes2NU2022!"
 
 
 # ============================================================
