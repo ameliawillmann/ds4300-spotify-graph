@@ -2,21 +2,11 @@
 neo4j_connection.py
 Connects and disconnects from the neo4j database.
 """
-
 from neo4j import GraphDatabase
-
-# ============================================================
-# CONFIGURATION - Update these to match your Neo4j setup
-# ============================================================
 
 NEO4J_URI = "bolt://localhost:7687"
 NEO4J_USER = "neo4j"
-NEO4J_PASSWORD = "CharGoes2NU2022!"
-
-
-# ============================================================
-# CONNECTION
-# ============================================================
+NEO4J_PASSWORD = ""
 
 def connect():
     """
@@ -40,15 +30,3 @@ def clear_database(driver):
     with driver.session() as session:
         session.run("MATCH (n) DETACH DELETE n")
     print("Database cleared.")
-
-
-# ============================================================
-# QUICK TEST
-# ============================================================
-
-if __name__ == "__main__":
-    driver = connect()
-    with driver.session() as session:
-        result = session.run("RETURN 'Hello from Neo4j!' AS message")
-        print(result.single()["message"])
-    close(driver)
