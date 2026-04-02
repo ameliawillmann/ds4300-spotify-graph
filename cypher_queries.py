@@ -1,16 +1,4 @@
-"""
-cypher_queries.py
-Contains all Cypher queries for building and querying the Neo4j graph.
-
-Graph model:
-    (:Song)-[:SIMILAR_TO {distance: float}]->(:Song)
-    Song properties: track_id, track_name, artists, album_name, popularity,
-    danceability, energy, loudness, speechiness, acousticness,
-    instrumentalness, liveness, valence, tempo, track_genre
-"""
-
 BATCH_SIZE = 500
-LIKED_ARTISTS = ['The Strokes', 'Regina Spektor']
 
 
 def create_indexes(driver):
@@ -93,11 +81,12 @@ def get_graph_stats(driver):
     return nodes, edges
 
 
-def get_recommendations(driver, limit=5):
+def get_recommendations(driver, liked_artists, limit=5):
     """
-    Recommend songs similar to LIKED_ARTISTS, ranked by number of
+    Recommend songs similar to liked_artists, ranked by number of
     connections to liked songs (desc) then avg distance (asc).
     """
+
     query = """
         MATCH (liked:Song)
         WHERE ANY(artist IN $artists WHERE liked.artists CONTAINS artist)
@@ -113,11 +102,12 @@ def get_recommendations(driver, limit=5):
         LIMIT $limit
     """
     print("\n" + "=" * 60)
-    print(f"TOP {limit} SONG RECOMMENDATIONS FOR PROF. RACHLIN")
+    print(f"TOP {limit} SONG RECOMMENDATIONS")
+    print(f"Based on: {' & '.join(liked_artists)}")
     print("=" * 60)
 
     with driver.session() as session:
-        records = list(session.run(query, {"limit": limit, "artists": LIKED_ARTISTS}))
+        records = list(session.run(query, {"limit": limit, "artists": liked_artists}))
 
     if not records:
         print("No recommendations found. Try adjusting the similarity threshold.")
@@ -134,8 +124,9 @@ def get_recommendations(driver, limit=5):
     return records
 
 
-def get_strokes_spektor_songs(driver):
+def get_liked_songs(driver, liked_artists):
     """List all liked artist songs in the graph."""
+
     query = """
         MATCH (s:Song)
         WHERE ANY(artist IN $artists WHERE s.artists CONTAINS artist)
@@ -144,25 +135,24 @@ def get_strokes_spektor_songs(driver):
         ORDER BY s.artists, s.album_name, s.track_name
     """
     with driver.session() as session:
-        records = list(session.run(query, {"artists": LIKED_ARTISTS}))
-    print(f"\nStrokes & Spektor songs in graph: {len(records)}")
+        records = list(session.run(query, {"artists": liked_artists}))
+    print(f"\nLiked artist songs in graph: {len(records)}")
     for r in records:
         print(f"  {r['Artist']} - \"{r['Song']}\" ({r['Album']})")
     return records
 
 
 def get_neighbors_of_song(driver, track_name):
-    """Find the top 10 most similar songs to a given track."""
+    """Find all similar songs to a given track, ordered by distance."""
     query = """
         MATCH (s:Song {track_name: $name})-[r:SIMILAR_TO]->(neighbor:Song)
         RETURN neighbor.track_name AS Song, neighbor.artists AS Artist,
                neighbor.track_genre AS Genre, r.distance AS distance
         ORDER BY r.distance ASC
-        LIMIT 10
     """
     with driver.session() as session:
         records = list(session.run(query, {"name": track_name}))
-    print(f"\nTop 10 songs similar to \"{track_name}\":")
+    print(f"\nSongs similar to \"{track_name}\" ({len(records)} total):")
     for r in records:
         print(f"  {r['Artist']} - \"{r['Song']}\" ({r['Genre']}) | dist: {r['distance']:.4f}")
     return records
@@ -191,8 +181,8 @@ def build_graph(driver, df, edges):
     create_similarity_edges(driver, df, edges)
 
 
-def explore_graph(driver):
+def explore_graph(driver, liked_artists):
     """Print graph stats and artist/degree breakdowns."""
     get_graph_stats(driver)
-    get_strokes_spektor_songs(driver)
+    get_liked_songs(driver, liked_artists)
     get_degree_distribution(driver)

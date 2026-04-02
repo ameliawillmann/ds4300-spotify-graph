@@ -4,7 +4,7 @@ Handles loading, sampling, normalizing the Spotify data,
 and computing pairwise similarity between songs.
 
 SAMPLING STRATEGY:
-- Include ALL songs by The Strokes and Regina Spektor
+- Include ALL songs by the two user-specified liked artists
 - Randomly sample remaining songs across genres for diversity
 - Remove duplicate track_ids
 
@@ -19,39 +19,39 @@ import numpy as np
 from itertools import combinations
 
 CSV_PATH = "spotify.csv"
-SAMPLE_SIZE = 6000
-SIMILARITY_THRESHOLD = 0.30
+SAMPLE_SIZE = 5000
+SIMILARITY_THRESHOLD = 0.40
 
-# Exclude loudness for now
 FEATURES = [
     'danceability', 'energy', 'speechiness',
     'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo'
 ]
 
-def load_and_sample_data(csv_path=CSV_PATH, sample_size=SAMPLE_SIZE):
+def load_and_sample_data(csv_path=CSV_PATH, sample_size=SAMPLE_SIZE, liked_artists=None):
     """
-    Load the Spotify CSV and create a sample that:
-    - Includes ALL songs by The Strokes and Regina Spektor
-    - Randomly samples remaining songs for diversity
-    - Removes duplicate track_ids (keeps first occurrence)
+    Load the Spotify data. Create sample that:
+    - Includes all songs by the two liked artists
+    - Randomly samples remaining songs across genres
+    - Removes duplicate track_ids
+    """
+    if liked_artists is None:
+        # Amelia chose fallback options lol
+        liked_artists = ['Adele', 'Bob Dylan']
 
-    Returns:
-        pd.DataFrame: Sampled dataset
-    """
     print("Loading Spotify data...")
     df = pd.read_csv(csv_path)
     print(f"  Full dataset: {len(df):,} songs")
 
     df = df.drop_duplicates(subset='track_id', keep='first')
-    print(f"  After deduplication: {len(df):,} songs")
+    print(f"  After dropping duplicates: {len(df):,} songs")
 
-    strokes_mask = df['artists'].str.contains('The Strokes', case=False, na=False)
-    spektor_mask = df['artists'].str.contains('Regina Spektor', case=False, na=False)
-    must_include = df[strokes_mask | spektor_mask]
-    remaining = df[~(strokes_mask | spektor_mask)]
+    masks = [df['artists'].str.contains(a, case=False, na=False) for a in liked_artists]
+    must_include_mask = masks[0] | masks[1]
+    must_include = df[must_include_mask]
+    remaining = df[~must_include_mask]
 
-    print(f"  The Strokes songs: {strokes_mask.sum()}")
-    print(f"  Regina Spektor songs: {spektor_mask.sum()}")
+    for artist, mask in zip(liked_artists, masks):
+        print(f"  {artist} songs: {mask.sum()}")
 
     n_random = sample_size - len(must_include)
     random_sample = remaining.sample(n=min(n_random, len(remaining)), random_state=42)
@@ -59,6 +59,7 @@ def load_and_sample_data(csv_path=CSV_PATH, sample_size=SAMPLE_SIZE):
     sample = pd.concat([must_include, random_sample]).reset_index(drop=True)
     print(f"  Final sample size: {len(sample):,} songs")
     return sample
+
 
 def normalize_features(df, features=FEATURES):
     """
@@ -76,6 +77,7 @@ def normalize_features(df, features=FEATURES):
         df_norm[feat] = (col - min_val) / (max_val - min_val) if max_val > min_val else 0.0
     print(f"  Normalized {len(features)} features: {features}")
     return df_norm
+
 
 def compute_edges(df, features=FEATURES, threshold=SIMILARITY_THRESHOLD):
     """
