@@ -22,15 +22,11 @@ CSV_PATH = "spotify.csv"
 SAMPLE_SIZE = 6000
 SIMILARITY_THRESHOLD = 0.30
 
+# Exclude loudness for now
 FEATURES = [
     'danceability', 'energy', 'speechiness',
     'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo'
 ]
-
-
-# ============================================================
-# DATA LOADING AND SAMPLING
-# ============================================================
 
 def load_and_sample_data(csv_path=CSV_PATH, sample_size=SAMPLE_SIZE):
     """
@@ -64,11 +60,6 @@ def load_and_sample_data(csv_path=CSV_PATH, sample_size=SAMPLE_SIZE):
     print(f"  Final sample size: {len(sample):,} songs")
     return sample
 
-
-# ============================================================
-# FEATURE NORMALIZATION
-# ============================================================
-
 def normalize_features(df, features=FEATURES):
     """
     Min-max normalize musical features to [0, 1].
@@ -85,11 +76,6 @@ def normalize_features(df, features=FEATURES):
         df_norm[feat] = (col - min_val) / (max_val - min_val) if max_val > min_val else 0.0
     print(f"  Normalized {len(features)} features: {features}")
     return df_norm
-
-
-# ============================================================
-# SIMILARITY COMPUTATION
-# ============================================================
 
 def compute_edges(df, features=FEATURES, threshold=SIMILARITY_THRESHOLD):
     """
