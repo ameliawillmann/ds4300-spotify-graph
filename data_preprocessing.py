@@ -65,9 +65,6 @@ def normalize_features(df, features=FEATURES):
     """
     Min-max normalize musical features to [0, 1].
     Ensures all features contribute equally to distance.
-
-    Returns:
-        pd.DataFrame: Copy of df with normalized feature columns
     """
     print("Normalizing features...")
     df_norm = df.copy()
@@ -83,9 +80,6 @@ def compute_edges(df, features=FEATURES, threshold=SIMILARITY_THRESHOLD):
     """
     Compute Euclidean distance between all pairs of songs.
     Only keeps pairs whose distance is below the threshold.
-
-    Returns:
-        list of tuples: (index_i, index_j, distance)
     """
     print(f"Computing pairwise Euclidean distances (threshold={threshold})...")
     feature_matrix = df[features].values.astype(float)
