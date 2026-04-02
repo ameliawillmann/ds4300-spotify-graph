@@ -20,12 +20,24 @@ from itertools import combinations
 
 CSV_PATH = "spotify.csv"
 SAMPLE_SIZE = 5000
-SIMILARITY_THRESHOLD = 0.40
+SIMILARITY_THRESHOLD = 0.25
 
 FEATURES = [
     'danceability', 'energy', 'speechiness',
     'acousticness', 'instrumentalness', 'liveness', 'valence', 'tempo'
 ]
+
+FEATURE_WEIGHTS = {
+    'danceability': 1.0,
+    'energy': 1.0,
+    'speechiness': 0.5,
+    'acousticness': 1.0,
+    'instrumentalness': 1.0,
+    'liveness': 0.5, 
+    'valence': 1.0,
+    'tempo': 0.5
+}
+
 
 def load_and_sample_data(csv_path=CSV_PATH, sample_size=SAMPLE_SIZE, liked_artists=None):
     """
@@ -75,21 +87,30 @@ def normalize_features(df, features=FEATURES):
     print(f"  Normalized {len(features)} features: {features}")
     return df_norm
 
+def apply_weights(feature_matrix, features=FEATURES, weights=FEATURE_WEIGHTS):
+    """
+    Scale each feature column by its weight.
+    Weighted Euclidean distance = distance on this scaled matrix.
+    """
+    weight_vector = np.array([weights[f] for f in features])
+    return feature_matrix * weight_vector
 
-def compute_edges(df, features=FEATURES, threshold=SIMILARITY_THRESHOLD):
+
+def compute_edges(df, features=FEATURES, threshold=SIMILARITY_THRESHOLD, weights=FEATURE_WEIGHTS):
     """
     Compute Euclidean distance between all pairs of songs.
     Only keeps pairs whose distance is below the threshold.
     """
     print(f"Computing pairwise Euclidean distances (threshold={threshold})...")
     feature_matrix = df[features].values.astype(float)
+    weighted_matrix = apply_weights(feature_matrix, features, weights)
 
     edges = []
-    n = len(feature_matrix)
+    n = len(weighted_matrix)
     total_pairs = n * (n - 1) // 2
 
     for count, (i, j) in enumerate(combinations(range(n), 2)):
-        dist = np.linalg.norm(feature_matrix[i] - feature_matrix[j])
+        dist = np.linalg.norm(weighted_matrix[i] - weighted_matrix[j])
         if dist <= threshold:
             edges.append((i, j, round(float(dist), 6)))
 
