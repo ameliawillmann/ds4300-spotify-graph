@@ -38,7 +38,6 @@ FEATURE_WEIGHTS = {
     'tempo': 0.5
 }
 
-
 def load_and_sample_data(csv_path=CSV_PATH, sample_size=SAMPLE_SIZE, liked_artists=None):
     """
     Load the Spotify data. Create sample that:
@@ -84,7 +83,6 @@ def normalize_features(df, features=FEATURES):
         col = df_norm[feat].astype(float)
         min_val, max_val = col.min(), col.max()
         df_norm[feat] = (col - min_val) / (max_val - min_val) if max_val > min_val else 0.0
-    print(f"  Normalized {len(features)} features: {features}")
     return df_norm
 
 def apply_weights(feature_matrix, features=FEATURES, weights=FEATURE_WEIGHTS):
