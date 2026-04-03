@@ -1,17 +1,38 @@
 """
-data_preprocessing.py
-Handles loading, sampling, normalizing the Spotify data,
-and computing pairwise similarity between songs.
+Amelia Willmann, Katie Malan, Charlotte Thunen
+Loads, samples, and normalizes Spotify dataset.
+Computes pairwise weighted Euclidean similarity between songs.
 
 SAMPLING STRATEGY:
-- Include ALL songs by the two user-specified liked artists
-- Randomly sample remaining songs across genres for diversity
-- Remove duplicate track_ids
+    To keep computation feasible while preserving relevance:
+    1. All songs by the two user-specified liked artists are included
+       in their entirety — these are the "seed" songs for recommendations.
+    2. The remaining sample slots are filled with randomly sampled songs
+       from the rest of the dataset (random_state=42 for reproducibility).
+    3. Duplicate track_ids are removed before sampling to avoid
+       the same song appearing multiple times in the graph.
+    Total sample size is controlled by SAMPLE_SIZE.
 
 SIMILARITY METRIC:
-- Euclidean distance on min-max normalized musical features
-- Features used: danceability, energy, speechiness,
-  acousticness, instrumentalness, liveness, valence, tempo
+    Weighted Euclidean distance on min-max normalized audio features.
+    Features are normalized to [0, 1] so no single feature dominates
+    due to scale differences (e.g. tempo vs danceability).
+    Weights are then applied to emphasize musically important features.
+    Two songs are connected in the graph only if their weighted
+    Euclidean distance is below SIMILARITY_THRESHOLD.
+
+FEATURES USED:
+    danceability, energy, speechiness, acousticness,
+    instrumentalness, liveness, valence, tempo
+
+FEATURES INTENTIONALLY EXCLUDED:
+    - genre
+    - popularity: not an audio characteristic; would bias results
+      toward mainstream songs rather than audio similarity
+    - loudness: low discriminative value after normalization
+    - duration_ms: not musically meaningful for similarity
+    - liveness: low weight assigned as it rarely varies meaningfully
+    - genre:
 """
 
 import pandas as pd

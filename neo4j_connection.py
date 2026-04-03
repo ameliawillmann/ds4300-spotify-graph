@@ -1,19 +1,20 @@
 """
 Amelia Willmann, Katie Malan, Charlotte Thunen
+Establishes connection between python and neo4j
+
+CONNECTION SETUP:
+    To set up environmental variables in terminal:
+    export NEO4J_URI="bolt://localhost:7687"
+    export NEO4J_USER="neo4j"
+    export NEO4J_PASSWORD="your_actual_password"
+
+    Check they are set up:
+    echo $NEO4J_URI
+    echo $NEO4J_PASSWORD
 """
 from neo4j import GraphDatabase
 import os
 
-"""
-Set up environmental variables in terminal:
-export NEO4J_URI="bolt://localhost:7687"
-export NEO4J_USER="neo4j"
-export NEO4J_PASSWORD="your_actual_password"
-
-Check they are set up:
-echo $NEO4J_URI
-echo $NEO4J_PASSWORD
-"""
 NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
 NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
@@ -25,9 +26,8 @@ def connect():
     print(f"Connected to Neo4j at {NEO4J_URI}")
     return driver
 
-
 def clear_database(driver):
-    """Remove all nodes and relationships in batches to avoid memory issues."""
+    """Remove all nodes and relationships in batches to avoid memory issues"""
     print("Clearing database...")
     with driver.session() as session:
         while True:
@@ -50,7 +50,7 @@ def clear_database(driver):
             if result.single()["deleted"] == 0:
                 break
 
-    print("Database cleared.")
+    print("Database cleared")
 
 def close(driver):
     """Close the Neo4j driver connection"""
