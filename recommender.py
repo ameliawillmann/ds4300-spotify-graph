@@ -4,13 +4,14 @@ Amelia Willmann, Katie Malan, Charlotte Thunen
 
 
 """
+import pandas as pd
 from neo4j_connection import connect, close, clear_database
-from data_preprocessing import load_and_sample_data, normalize_features, compute_edges
+from data_preprocessing import load_and_sample_data, normalize_features, compute_edges, CSV_PATH
 from cypher_queries import build_graph, explore_graph, get_recommendations
 
 
 def prompt_liked_artists():
-    """Prompt the user to enter 2 liked artists."""
+    """Prompt the user to enter 2 liked artists"""
     print("\n" + "=" * 60)
     print("MUSIC RECOMMENDATION SYSTEM")
     print("=" * 60)
@@ -19,8 +20,24 @@ def prompt_liked_artists():
     return [artist1, artist2]
 
 
+def validate_artists(liked_artists, csv_path=CSV_PATH):
+    """Check that both artists exist in the dataset before proceeding"""
+    df = pd.read_csv(csv_path, usecols=['artists'])
+    for artist in liked_artists:
+        match = df['artists'].str.contains(artist, case=False, na=False).sum()
+        if match == 0:
+            print(f"  ERROR: Could not find '{artist}' in the dataset. Please check the artist name.")
+            return False
+    return True
+
+
 def main():
     liked_artists = prompt_liked_artists()
+
+    if not validate_artists(liked_artists):
+        print("\nAborting. Please re-run and enter valid artist names.")
+        return
+
     print(f"\nGenerating recommendations based on: {liked_artists[0]} & {liked_artists[1]}")
 
     df = load_and_sample_data(liked_artists=liked_artists)
