@@ -28,7 +28,7 @@ def validate_artists(liked_artists, csv_path=CSV_PATH):
     return True
 
 def main():
-    # Validate that the artist inputted matches with the dataset
+    """Validate that the artist inputted matches with the dataset"""
     liked_artists = prompt_liked_artists()
 
     if not validate_artists(liked_artists):

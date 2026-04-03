@@ -26,13 +26,13 @@ FEATURES USED:
     instrumentalness, liveness, valence, tempo
 
 FEATURES INTENTIONALLY EXCLUDED:
-    - genre
     - popularity: not an audio characteristic; would bias results
       toward mainstream songs rather than audio similarity
     - loudness: low discriminative value after normalization
     - duration_ms: not musically meaningful for similarity
     - liveness: low weight assigned as it rarely varies meaningfully
-    - genre:
+    - genre: allows for a wider variety of songs; prevents overfitting 
+      to same genre or more popular genres
 """
 
 import pandas as pd
@@ -67,7 +67,7 @@ def load_and_sample_data(csv_path=CSV_PATH, sample_size=SAMPLE_SIZE, liked_artis
     - Removes duplicate track_ids
     """
     if liked_artists is None:
-        # Amelia chose fallback options lol
+        # our chosen fallback artists
         liked_artists = ['Adele', 'Bob Dylan']
 
     print("Loading Spotify data...")

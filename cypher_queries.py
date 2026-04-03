@@ -1,48 +1,45 @@
 """
 Amelia Willmann, Katie Malan, Charlotte Thunen
 
-Handles all Neo4j graph construction and querying.
+All Neo4j graph querying
 
 GRAPH DATA MODEL:
     Nodes:
         Label: Song
-        Properties:
-            - track_id (str):          Unique Spotify track identifier — used as the primary key
-            - track_name (str):        Song title
-            - artists (str):           Artist name(s)
-            - album_name (str):        Album title
-            - popularity (int):        Spotify popularity score (0-100); stored for reference only,
-                                       not used in similarity computation
-            - danceability (float):    How suitable a track is for dancing (0.0-1.0)
-            - energy (float):          Perceptual measure of intensity and activity (0.0-1.0)
-            - loudness (float):        Overall loudness in decibels; stored for reference only
-            - speechiness (float):     Presence of spoken words (0.0-1.0)
-            - acousticness (float):    Confidence the track is acoustic (0.0-1.0)
-            - instrumentalness (float):Likelihood the track has no vocals (0.0-1.0)
-            - liveness (float):        Presence of a live audience (0.0-1.0)
-            - valence (float):         Musical positiveness (0.0-1.0)
-            - tempo (float):           Estimated beats per minute
-            - track_genre (str):       Genre label from the dataset
+            - track_id (str):           Unique Spotify track identifier — used as the primary key
+            - track_name (str):         Song title
+            - artists (str):            Artist name(s)
+            - album_name (str):         Album title
+            - popularity (int):         Spotify popularity score (0-100)
+            - danceability (float):     How suitable a track is for dancing (0.0-1.0)
+            - energy (float):           Perceptual measure of intensity and activity (0.0-1.0)
+            - loudness (float):         Overall loudness in decibels; stored for reference only
+            - speechiness (float):      Presence of spoken words (0.0-1.0)
+            - acousticness (float):     Confidence the track is acoustic (0.0-1.0)
+            - instrumentalness (float): Likelihood the track has no vocals (0.0-1.0)
+            - liveness (float):         Presence of a live audience (0.0-1.0)
+            - valence (float):          Musical positiveness (0.0-1.0)
+            - tempo (float):            Estimated beats per minute
+            - track_genre (str):        Genre label from the dataset
 
     Relationships:
-        Type: SIMILAR_TO
-        Direction: Bidirectional (a->b and b->a both created)
-        Properties:
-            - distance (float):        Weighted Euclidean distance between the two songs'
-                                       normalized audio feature vectors. Lower = more similar.
-                                       Only exists if distance <= SIMILARITY_THRESHOLD (0.25).
+    Type: SIMILAR_TO
+        - distance (float):     Weighted Euclidean distance between the two songs'
+                                normalized audio feature vectors
+                                Lower = more similar
+                                Threshold at 0.25 means that the relationship only exists
+                                when the distance <= 0.25
 
 RECOMMENDATION ALGORITHM:
-    Songs are recommended based on their connections to liked artist songs in the graph.
-    For each candidate song, two metrics are computed:
-        1. connections: Number of liked artist songs it shares a SIMILAR_TO edge with
+    Songs are recommended based on their connections to liked artist songs in the graph
+    Used 2 metrics:
+        1. connections: Number of liked artist songs it shares an edge with
         2. similarity_score: SUM(1 / distance) across all connections to liked songs
-           — rewards songs that are close to many liked songs, not just one
-    Results are ranked by similarity_score descending and the top N are returned.
-    This approach favors songs that are consistently similar to the liked artists'
-    overall sound rather than just matching one song closely.
-
+            - Favors songs that are close to many liked songs over one liked song
+    Rank results by the similarity score descending
+    We are prioritizing songs that are consistently similar to the sound of the liked artists!!
 """
+
 # Number of records sent to Neo4j per transaction to avoid memory issues
 BATCH_SIZE = 500
 
