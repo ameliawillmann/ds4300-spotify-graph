@@ -43,14 +43,12 @@ RECOMMENDATION ALGORITHM:
 # Number of records sent to Neo4j per transaction to avoid memory issues
 BATCH_SIZE = 500
 
-
 def create_indexes(driver):
     """Create indexes on Song nodes for faster lookups"""
     with driver.session() as session:
         session.run("CREATE INDEX IF NOT EXISTS FOR (s:Song) ON (s.track_id)")
         session.run("CREATE INDEX IF NOT EXISTS FOR (s:Song) ON (s.artists)")
     print("Indexes created on track_id and artists.")
-
 
 def create_song_nodes(driver, df):
     """Batch-insert Song nodes using MERGE on track_id to avoid duplicates"""
@@ -89,7 +87,6 @@ def create_song_nodes(driver, df):
             session.run(query, {"batch": records[i:i + BATCH_SIZE]})
     print(f"  All {len(records):,} Song nodes created.")
 
-
 def create_similarity_edges(driver, df, edges):
     """Batch-insert bidirectional SIMILAR_TO edges with distance property"""
     print(f"Creating {len(edges):,} SIMILAR_TO edges...")
@@ -109,9 +106,8 @@ def create_similarity_edges(driver, df, edges):
             session.run(query, {"batch": edge_records[i:i + BATCH_SIZE]})
     print(f"  All {len(edge_records):,} SIMILAR_TO edges created.")
 
-
 def get_graph_stats(driver):
-    """Print and return total node and edge counts."""
+    """Print and return total node and edge counts"""
     with driver.session() as session:
         nodes = session.run("MATCH (n:Song) RETURN COUNT(n) AS count").single()["count"]
         edges = session.run("MATCH ()-[r:SIMILAR_TO]->() RETURN COUNT(r) AS count").single()["count"]
@@ -120,11 +116,10 @@ def get_graph_stats(driver):
     print(f"  Total Edges: {edges:,}")
     return nodes, edges
 
-
 def get_recommendations(driver, liked_artists, limit=5):
     """
     Recommend songs similar to liked_artists, ranked by number of
-    connections to liked songs (desc) then avg distance (asc).
+    connections to liked songs (desc) then avg distance (asc)
     """
     query = """
         MATCH (liked:Song)
@@ -168,9 +163,8 @@ def get_recommendations(driver, liked_artists, limit=5):
     print("\n" + "=" * 60)
     return records
 
-
 def get_liked_songs(driver, liked_artists):
-    """List all liked artist songs in the graph."""
+    """List all liked artist songs in the graph"""
     query = """
         MATCH (s:Song)
         WHERE ANY(artist IN $artists WHERE s.artists CONTAINS artist)
@@ -183,9 +177,8 @@ def get_liked_songs(driver, liked_artists):
     print(f"\nLiked artist songs in graph: {total:,}")
     return records
 
-
 def get_neighbors_of_song(driver, track_name):
-    """Find all similar songs to a given track, ordered by distance."""
+    """Find all similar songs to a given track, ordered by distance"""
     query = """
         MATCH (s:Song {track_name: $name})-[r:SIMILAR_TO]->(neighbor:Song)
         RETURN neighbor.track_name AS Song, neighbor.artists AS Artist,
@@ -199,9 +192,8 @@ def get_neighbors_of_song(driver, track_name):
         print(f"  {r['Artist']} - \"{r['Song']}\" ({r['Genre']}) | dist: {r['distance']:.4f}")
     return records
 
-
 def get_degree_distribution(driver):
-    """Print degree distribution (number of SIMILAR_TO connections per song)."""
+    """Print degree distribution (number of SIMILAR_TO connections per song)"""
     query = """
         MATCH (s:Song)-[r:SIMILAR_TO]->()
         WITH s, COUNT(r) AS degree
@@ -215,15 +207,13 @@ def get_degree_distribution(driver):
         print(f"  Degree {r['degree']}: {r['num_songs']} songs")
     return records
 
-
 def build_graph(driver, df, edges):
-    """Populate the database with song nodes and similarity edges."""
+    """Populate the database with song nodes and similarity edges"""
     create_indexes(driver)
     create_song_nodes(driver, df)
     create_similarity_edges(driver, df, edges)
 
-
 def explore_graph(driver, liked_artists):
-    """Print graph stats and liked artist summary."""
+    """Print graph stats and liked artist summary"""
     get_graph_stats(driver)
     get_liked_songs(driver, liked_artists)

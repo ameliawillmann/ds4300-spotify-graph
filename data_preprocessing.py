@@ -4,35 +4,25 @@ Loads, samples, and normalizes Spotify dataset.
 Computes pairwise weighted Euclidean similarity between songs.
 
 SAMPLING STRATEGY:
-    To keep computation feasible while preserving relevance:
-    1. All songs by the two user-specified liked artists are included
-       in their entirety — these are the "seed" songs for recommendations.
-    2. The remaining sample slots are filled with randomly sampled songs
-       from the rest of the dataset (random_state=42 for reproducibility).
-    3. Duplicate track_ids are removed before sampling to avoid
-       the same song appearing multiple times in the graph.
-    Total sample size is controlled by SAMPLE_SIZE.
+- Include ALL songs by the two user-specified liked artists
+- Randomly sample remaining songs across genres for diversity
+- Remove duplicate track_ids
 
 SIMILARITY METRIC:
-    Weighted Euclidean distance on min-max normalized audio features.
-    Features are normalized to [0, 1] so no single feature dominates
-    due to scale differences (e.g. tempo vs danceability).
-    Weights are then applied to emphasize musically important features.
-    Two songs are connected in the graph only if their weighted
-    Euclidean distance is below SIMILARITY_THRESHOLD.
+- Weighted Euclidean distance on min-max normalized audio features
+- Features are normalized to [0, 1] so no single feature dominates due to scale differences
+- Weights are then applied to emphasize musically important features
 
 FEATURES USED:
     danceability, energy, speechiness, acousticness,
     instrumentalness, liveness, valence, tempo
 
 FEATURES INTENTIONALLY EXCLUDED:
-    - popularity: not an audio characteristic; would bias results
-      toward mainstream songs rather than audio similarity
-    - loudness: low discriminative value after normalization
-    - duration_ms: not musically meaningful for similarity
-    - liveness: low weight assigned as it rarely varies meaningfully
-    - genre: allows for a wider variety of songs; prevents overfitting 
-      to same genre or more popular genres
+    - genre: build a song recommender that will recommend songs that are audibly similar but will
+            push the user to explore outside their usual genres
+    - popularity: could bias results toward mainstream songs rather than audio similarity
+    - loudness: not super indictive of similar songs
+    - duration_ms: not meaningful for similarity
 """
 
 import pandas as pd
@@ -92,7 +82,6 @@ def load_and_sample_data(csv_path=CSV_PATH, sample_size=SAMPLE_SIZE, liked_artis
     print(f"  Final sample size: {len(sample):,} songs")
     return sample
 
-
 def normalize_features(df, features=FEATURES):
     """
     Min-max normalize musical features to [0, 1].
@@ -113,7 +102,6 @@ def apply_weights(feature_matrix, features=FEATURES, weights=FEATURE_WEIGHTS):
     """
     weight_vector = np.array([weights[f] for f in features])
     return feature_matrix * weight_vector
-
 
 def compute_edges(df, features=FEATURES, threshold=SIMILARITY_THRESHOLD, weights=FEATURE_WEIGHTS):
     """
