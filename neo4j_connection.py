@@ -25,15 +25,38 @@ def connect():
     print(f"Connected to Neo4j at {NEO4J_URI}")
     return driver
 
+def clear_database(driver):
+    """Remove all nodes and relationships in batches to avoid memory issues."""
+    with driver.session() as session:
+        # Delete relationships in batches
+        while True:
+            result = session.run("""
+                MATCH ()-[r]->()
+                WITH r LIMIT 10000
+                DELETE r
+                RETURN COUNT(r) AS deleted
+            """)
+            deleted = result.single()["deleted"]
+            if deleted == 0:
+                break
+            print(f"  Deleted {deleted:,} relationships...")
+
+        # Delete nodes in batches
+        while True:
+            result = session.run("""
+                MATCH (n)
+                WITH n LIMIT 10000
+                DELETE n
+                RETURN COUNT(n) AS deleted
+            """)
+            deleted = result.single()["deleted"]
+            if deleted == 0:
+                break
+            print(f"  Deleted {deleted:,} nodes...")
+
+    print("Database cleared.")
 
 def close(driver):
     """Close the Neo4j driver connection"""
     driver.close()
     print("Neo4j connection closed.")
-
-
-def clear_database(driver):
-    """Remove all existing nodes and relationships from the database"""
-    with driver.session() as session:
-        session.run("MATCH (n) DETACH DELETE n")
-    print("Database cleared.")

@@ -28,13 +28,13 @@ FEATURES = [
 ]
 
 FEATURE_WEIGHTS = {
-    'danceability': 1.0,
-    'energy': 1.0,
+    'danceability': 1.5,
+    'energy': 1.5,
     'speechiness': 0.5,
     'acousticness': 1.0,
     'instrumentalness': 1.0,
     'liveness': 0.5, 
-    'valence': 1.0,
+    'valence': 1,
     'tempo': 0.5
 }
 

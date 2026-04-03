@@ -92,13 +92,18 @@ def get_recommendations(driver, liked_artists, limit=5):
         WHERE ANY(artist IN $artists WHERE liked.artists CONTAINS artist)
         MATCH (liked)-[r:SIMILAR_TO]->(rec:Song)
         WHERE NOT ANY(artist IN $artists WHERE rec.artists CONTAINS artist)
+        WITH rec,
+             COUNT(r) AS connections,
+             ROUND(AVG(r.distance), 4) AS avg_distance,
+             ROUND(SUM(1.0 / r.distance), 2) AS similarity_score
         RETURN rec.track_name AS Song,
                rec.artists    AS Artist,
                rec.album_name AS Album,
                rec.track_genre AS Genre,
-               COUNT(r) AS connections,
-               ROUND(AVG(r.distance), 4) AS avg_distance
-        ORDER BY connections DESC, avg_distance ASC
+               connections,
+               avg_distance,
+               similarity_score
+        ORDER BY similarity_score DESC
         LIMIT $limit
     """
     print("\n" + "=" * 60)
@@ -120,6 +125,7 @@ def get_recommendations(driver, liked_artists, limit=5):
         print(f"     Genre:  {record['Genre']}")
         print(f"     Connections to liked songs: {record['connections']}")
         print(f"     Avg similarity distance:    {record['avg_distance']}")
+        print(f"     Similarity score: {record['similarity_score']}")
     print("\n" + "=" * 60)
     return records
 
